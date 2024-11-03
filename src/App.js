@@ -10,6 +10,7 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const [isSelectionToolActive, setIsSelectionToolActive] = useState(false); // New state for toggle
   const searchBarRef = useRef(null);
   const navigate = useNavigate();
 
@@ -154,37 +155,62 @@ function App() {
     return luminance > 0.5;
   };
 
+  const toggleSelectionTool = () => {
+    setIsSelectionToolActive(prevState => !prevState);
+  };
+
   return (
     <div>
       <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Search..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          onKeyDown={handleKeyDown}
-          ref={searchBarRef}
-        />
-        {suggestions.length > 0 && (
-          <ul className="suggestions">
-            {suggestions.map((suggestion, index) => {
-              const bgColor = suggestion.color || defaultColor;
-              const textColor = isLight(bgColor) ? '#000' : '#fff';
-              return (
-                <li
-                  key={index}
-                  className={index === selectedSuggestionIndex ? 'selected' : ''}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  style={{ borderRadius: '5px', padding: '5px' }}
-                >
-                  <span className="tag" style={{ backgroundColor: bgColor, color: textColor }}>
-                    {suggestion.name}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        <div className="search-bar-elements">
+          <button 
+            className={`selection-tool ${isSelectionToolActive ? 'active' : ''}`} 
+            onClick={toggleSelectionTool}
+          >
+            Selection Tool
+          </button>
+          <div className="slider-container">
+            <input type="range" min="1" max="3" step="1" />
+          </div>
+          <div className="search-input-container">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onKeyDown={handleKeyDown}
+              ref={searchBarRef}
+            />
+            {suggestions.length > 0 && (
+              <ul className="suggestions">
+                {suggestions.map((suggestion, index) => {
+                  const bgColor = suggestion.color || defaultColor;
+                  const textColor = isLight(bgColor) ? '#000' : '#fff';
+                  return (
+                    <li
+                      key={index}
+                      className={index === selectedSuggestionIndex ? 'selected' : ''}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      style={{ borderRadius: '5px', padding: '5px' }}
+                    >
+                      <span className="tag" style={{ backgroundColor: bgColor, color: textColor }}>
+                        {suggestion.name}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+          <button className="add-button">+</button>
+          <button className="remove-button">-</button>
+          <select className="sort-dropdown">
+            <option value="desc">Alphabetically</option>
+            <option value="desc">Path</option>
+            <option value="asc">Random</option>
+            <option value="desc">Size</option>
+          </select>
+        </div>
       </div>
       <div className="top-bar">
         {tabs.map((tab) => (
