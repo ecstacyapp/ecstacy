@@ -3,7 +3,7 @@ import { Route, Routes, Link, useNavigate } from 'react-router-dom';
 import './App.css';
 import Fuse from 'fuse.js';
 import { ImagesContent, VideosContent } from './Media';
-import { TagsContent, CharactersContent, HottiesContent, ShowsContent } from './Entities';
+import { TagsContent, CharactersContent, HottiesContent, ChicksContent, ShowsContent } from './Entities';
 import SettingsContent from './Settings'
 
 function App() {
@@ -11,6 +11,7 @@ function App() {
   const [suggestions, setSuggestions] = useState([]);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const [isSelectionToolActive, setIsSelectionToolActive] = useState(false); // New state for toggle
+  const [gridSize, setGridSize] = useState(3); // New state for grid size
   const searchBarRef = useRef(null);
   const navigate = useNavigate();
 
@@ -19,51 +20,49 @@ function App() {
   const defaultColor = '#999999';
 
   const tagsList = [
-    { name: 'Tag1', color: '#FF5733' },
-    { name: 'Tag2', color: '#33FF57' },
-    { name: 'Tag3', color: '#3357FF' }
+    { name: 'Tag1', color: '#FF5733', type: 'Tag' },
+    { name: 'Tag2', color: '#33FF57', type: 'Tag' },
+    { name: 'Tag3', color: '#3357FF', type: 'Tag' }
   ].map(item => ({ ...item, color: item.color || defaultColor }));
 
   const charactersList = [
-    { name: 'Character1', color: '#FFD700' },
-    { name: 'Character2', color: '#FF1493' },
-    { name: 'Character3', color: '#8A2BE2' }
+    { name: 'Character1', color: '#FFD700', type: 'Character' },
+    { name: 'Character2', color: '#FF1493', type: 'Character' },
+    { name: 'Character3', color: '#8A2BE2', type: 'Character' }
   ].map(item => ({ ...item, color: item.color || defaultColor }));
 
   const hottiesList = [
-    { name: 'Hottie1', color: '#FF6347' },
-    { name: 'Hottie2', color: '#7CFC00' },
-    { name: 'Hottie3', color: '#4682B4' }
+    { name: 'Hottie1', color: '#FF6347', type: 'Hottie' },
+    { name: 'Hottie2', color: '#7CFC00', type: 'Hottie' },
+    { name: 'Hottie3', color: '#4682B4', type: 'Hottie' }
   ].map(item => ({ ...item, color: item.color || defaultColor }));
 
   const chicksList = [
-    { name: 'Chick1', color: '#FFB6C1' },
-    { name: 'Chick2', color: '#20B2AA' },
-    { name: 'Chick3', color: '#87CEFA' }
+    { name: 'Chick1', color: '#FFB6C1', type: 'Chick' },
+    { name: 'Chick2', color: '#20B2AA', type: 'Chick' },
+    { name: 'Chick3', color: '#87CEFA', type: 'Chick' }
   ].map(item => ({ ...item, color: item.color || defaultColor }));
 
   const showsList = [
-    { name: 'Show1', color: '#40E0D0' },
-    { name: 'Show2', color: '#FF4500' },
-    { name: 'Show3', color: '#DA70D6' }
+    { name: 'Show1', color: '#40E0D0', type: 'Show' },
+    { name: 'Show2', color: '#FF4500', type: 'Show' },
+    { name: 'Show3', color: '#DA70D6', type: 'Show' }
   ].map(item => ({ ...item, color: item.color || defaultColor }));
 
-  const predefinedList = [...tagsList, ...charactersList, ...hottiesList, ...showsList];
-
-  const fuse = new Fuse(predefinedList, {
-    includeScore: true,
-    threshold: 0.3, // Adjust this for sensitivity
-  });
-
   const handleSearchChange = (e) => {
-    const term = e.target.value.toLowerCase();
+    const term = e.target.value;
     setSearchTerm(term);
-  
+
     if (term) {
       const allItems = [...tagsList, ...charactersList, ...hottiesList, ...chicksList, ...showsList];
-      const results = allItems.filter(item => item.name.toLowerCase().includes(term)).map(item => ({
+      const options = {
+        keys: ['name'],
+        threshold: 0.8
+      };
+      const fuse = new Fuse(allItems, options);
+      const results = fuse.search(term).map(({ item }) => ({
         ...item,
-        color: item.color || defaultColor // Ensure color is defined
+        color: item.color || defaultColor
       }));
       setSuggestions(results);
       setSelectedSuggestionIndex(0);
@@ -128,17 +127,17 @@ function App() {
     };
   }, []);
 
-  const renderContent = () => {
+  const renderContent = (gridSize) => {
     return (
       <Routes>
-        <Route path="/tags" element={<TagsContent />} />
-        <Route path="/characters" element={<CharactersContent />} />
-        <Route path="/hotties" element={<HottiesContent />} />
-        <Route path="/chicks" element={<HottiesContent />} />
-        <Route path="/shows" element={<ShowsContent />} />
+        <Route path="/tags" element={<TagsContent gridSize={gridSize} />} />
+        <Route path="/characters" element={<CharactersContent gridSize={gridSize} />} />
+        <Route path="/hotties" element={<HottiesContent gridSize={gridSize} />} />
+        <Route path="/chicks" element={<ChicksContent gridSize={gridSize} />} />
+        <Route path="/shows" element={<ShowsContent gridSize={gridSize} />} />
         <Route path="/settings" element={<SettingsContent />} />
-        <Route path="/images" element={<ImagesContent />} />
-        <Route path="/videos" element={<VideosContent />} />
+        <Route path="/images" element={<ImagesContent gridSize={gridSize} />} />
+        <Route path="/videos" element={<VideosContent gridSize={gridSize} />} />
         <Route path="/" element={<div>Select a tab or use the search bar</div>} />
       </Routes>
     );
@@ -159,6 +158,10 @@ function App() {
     setIsSelectionToolActive(prevState => !prevState);
   };
 
+  const handleSliderChange = (e) => {
+    setGridSize(parseInt(e.target.value, 10));
+  };
+
   return (
     <div>
       <div className="search-bar">
@@ -170,7 +173,14 @@ function App() {
             Selection Tool
           </button>
           <div className="slider-container">
-            <input type="range" min="1" max="3" step="1" />
+            <input 
+              type="range" 
+              min="1" 
+              max="5" 
+              step="1" 
+              value={gridSize} 
+              onChange={handleSliderChange} // Update handler
+            />
           </div>
           <div className="search-input-container">
             <input
@@ -191,8 +201,10 @@ function App() {
                       key={index}
                       className={index === selectedSuggestionIndex ? 'selected' : ''}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      style={{ borderRadius: '5px', padding: '5px' }}
                     >
+                      <span style={{ marginRight: '10px'}}>
+                        {suggestion.type}:
+                      </span>
                       <span className="tag" style={{ backgroundColor: bgColor, color: textColor }}>
                         {suggestion.name}
                       </span>
@@ -224,7 +236,7 @@ function App() {
         ))}
       </div>
       <div id="content">
-        {renderContent()}
+        {renderContent(gridSize)} {/* Pass gridSize */}
       </div>
     </div>
   );

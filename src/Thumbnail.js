@@ -1,14 +1,13 @@
 import React from 'react';
+import './Thumbnail.css'; // Assuming you have a Thumbnail.css
 
-function Thumbnail({ src, caption }) {
-  return (
-    <div className="thumbnail">
-        <div className="image-container">
-            <img src={src} alt={caption} />
-        </div>
-        <div className="caption">{caption}</div>
+const Thumbnail = ({ src, caption }) => (
+  <div className="thumbnail">
+    <div className="image-container">
+      <img src={src} alt={caption} />
     </div>
-  );
-}
+    <div className="caption">{caption}</div>
+  </div>
+);
 
 export default Thumbnail;
